@@ -1,3 +1,6 @@
+"""
+ATS score calculation module.
+"""
 from sklearn.metrics.pairwise import cosine_similarity
 
 from app.embeddings import (

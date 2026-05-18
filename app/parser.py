@@ -1,6 +1,12 @@
+"""
+pdf to text converter
+"""
 from pypdf import PdfReader
 
 def extract_text(pdf_path):
+    """
+    extract text from resume
+    """
 
     reader = PdfReader(pdf_path)
 
@@ -10,3 +16,5 @@ def extract_text(pdf_path):
         text += page.extract_text()
 
     return text
+
+

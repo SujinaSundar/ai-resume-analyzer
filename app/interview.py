@@ -36,3 +36,5 @@ def generate_questions(skill):
     )
 
     return result
+
+
