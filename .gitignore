@@ -5,7 +5,7 @@ build/
 dist/
 wheels/
 *.egg-info
-
+.pytest_cache/
 # Virtual environments
 .venv
 # Virtual Environment
@@ -14,7 +14,7 @@ wheels/
 # Python Cache
 __pycache__/
 *.pyc
-
+.pylintrc
 # Jupyter
 .ipynb_checkpoints/
 

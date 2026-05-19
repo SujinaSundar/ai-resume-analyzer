@@ -29,12 +29,8 @@ def generate_questions(skill):
         temperature=0.7,
         do_sample=True
     )
-
     result = tokenizer.decode(
         outputs[0],
         skip_special_tokens=True
     )
-
     return result
-
-
