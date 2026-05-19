@@ -14,7 +14,7 @@ wheels/
 # Python Cache
 __pycache__/
 *.pyc
-.pylintrc
+
 # Jupyter
 .ipynb_checkpoints/
 
