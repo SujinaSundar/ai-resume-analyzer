@@ -1,36 +1,82 @@
 from transformers import (
     AutoTokenizer,
-    AutoModelForSeq2SeqLM
+    AutoModelForCausalLM,
+    pipeline
+)
+
+MODEL_NAME = (
+    "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
 )
 
 tokenizer = AutoTokenizer.from_pretrained(
-    "google/flan-t5-base"
+    MODEL_NAME
 )
 
-model = AutoModelForSeq2SeqLM.from_pretrained(
-    "google/flan-t5-base"
+model = AutoModelForCausalLM.from_pretrained(
+    MODEL_NAME
 )
 
-def generate_questions(skill):
+generator = pipeline(
+    "text-generation",
+    model=model,
+    tokenizer=tokenizer
+)
 
-    prompt = (
-        f"Generate 5 technical interview "
-        f"questions for {skill}."
-    )
 
-    inputs = tokenizer(
-        prompt,
-        return_tensors="pt"
-    )
+def generate_questions(skills):
 
-    outputs = model.generate(
-        **inputs,
-        max_new_tokens=100,
-        temperature=0.7,
-        do_sample=True
-    )
-    result = tokenizer.decode(
-        outputs[0],
-        skip_special_tokens=True
-    )
-    return result
+    all_questions = []
+
+    # Limit skills for speed
+    skills = skills[:5]
+
+    for skill in skills:
+
+        prompt = f"""
+Generate 3 technical interview questions
+for a candidate skilled in {skill}.
+
+Return ONLY the questions.
+Do not include explanations.
+"""
+
+        result = generator(
+            prompt,
+            max_new_tokens=80,
+            temperature=0.3,
+            do_sample=False
+        )
+
+        generated_text = result[0][
+            "generated_text"
+        ]
+
+        # Remove prompt from output
+        answer = generated_text.replace(
+            prompt,
+            ""
+        ).strip()
+
+        # Split questions
+        questions = answer.split("\n")
+
+        cleaned_questions = []
+
+        for question in questions:
+
+            question = question.strip()
+
+            if question:
+
+                cleaned_questions.append(
+                    question
+                )
+
+        all_questions.append({
+
+            "skill": skill,
+
+            "questions": cleaned_questions
+        })
+
+    return all_questions
