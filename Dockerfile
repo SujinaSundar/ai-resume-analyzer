@@ -1,11 +1,17 @@
-FROM python:3.11
+FROM python:3.11-slim
 
 WORKDIR /app
 
-COPY . .
+COPY pyproject.toml uv.lock ./
 
 RUN pip install uv
 
 RUN uv sync
 
-CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+COPY app ./app
+
+COPY .env ./
+
+EXPOSE 8000
+
+CMD ["uv","run","uvicorn","app.main:app","--host","0.0.0.0","--port","8000"]

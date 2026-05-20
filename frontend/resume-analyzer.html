@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Resume Analyzer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #0f0e0d;
+    --paper: #f5f2ed;
+    --paper-2: #ede9e2;
+    --accent: #c84b2f;
+    --accent-pale: #f5e8e4;
+    --muted: #7a7570;
+    --border: #d8d3cb;
+    --success: #2a6c4a;
+    --success-pale: #e3f0ea;
+    --warn: #8a5a1a;
+    --warn-pale: #fdf0dd;
+    --card-bg: #fff;
+    --shadow: 0 1px 3px rgba(15,14,13,0.08), 0 4px 16px rgba(15,14,13,0.06);
+    --shadow-lg: 0 2px 8px rgba(15,14,13,0.1), 0 12px 40px rgba(15,14,13,0.12);
+    --radius: 12px;
+    --radius-sm: 6px;
+    --radius-pill: 999px;
+  }
+
+  html { font-size: 16px; scroll-behavior: smooth; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Outfit', sans-serif;
+    font-weight: 400;
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  /* ── noise grain overlay ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    background-size: 120px;
+  }
+
+  /* ── layout ── */
+  .shell {
+    position: relative;
+    z-index: 1;
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 6rem;
+  }
+
+  /* ── masthead ── */
+  .masthead {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 3rem;
+    animation: fadeUp 0.5s ease both;
+  }
+  .masthead-icon {
+    width: 48px;
+    height: 48px;
+    background: var(--accent);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 4px;
+  }
+  .masthead-icon svg { width: 24px; height: 24px; color: #fff; }
+  .masthead h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(2rem, 5vw, 2.75rem);
+    font-weight: 400;
+    line-height: 1.1;
+    color: var(--ink);
+  }
+  .masthead p {
+    font-size: 0.9rem;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  /* ── api url bar ── */
+  .api-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--paper-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    margin-bottom: 2rem;
+    animation: fadeUp 0.5s 0.05s ease both;
+  }
+  .api-bar label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .api-bar input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--ink);
+    outline: none;
+  }
+  .api-bar input::placeholder { color: var(--muted); }
+
+  /* ── cards ── */
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: var(--shadow);
+    animation: fadeUp 0.5s ease both;
+  }
+  .card:nth-child(2) { animation-delay: 0.08s; }
+  .card:nth-child(3) { animation-delay: 0.14s; }
+
+  .card-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 1rem;
+  }
+  .card-eyebrow svg { width: 14px; height: 14px; }
+
+  /* ── drop zone ── */
+  .drop-zone {
+    border: 1.5px dashed var(--border);
+    border-radius: var(--radius-sm);
+    padding: 2.5rem 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .drop-zone:hover, .drop-zone.drag-over {
+    border-color: var(--accent);
+    background: var(--accent-pale);
+  }
+  .drop-zone input[type=file] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer;
+  }
+  .drop-zone .dz-icon {
+    width: 40px; height: 40px;
+    background: var(--paper-2);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 0.75rem;
+    transition: background 0.2s;
+  }
+  .drop-zone:hover .dz-icon { background: #f5c6bb; }
+  .drop-zone .dz-icon svg { width: 20px; height: 20px; color: var(--accent); }
+  .drop-zone .dz-primary {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--ink);
+  }
+  .drop-zone .dz-secondary {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-top: 3px;
+  }
+
+  .file-pill {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    background: var(--success-pale);
+    border: 1px solid #b3d9c4;
+    border-radius: var(--radius-pill);
+    padding: 5px 12px;
+    font-size: 0.78rem;
+    color: var(--success);
+    font-weight: 500;
+    width: fit-content;
+    margin-left: auto; margin-right: auto;
+  }
+  .file-pill svg { width: 13px; height: 13px; }
+
+  /* ── textarea ── */
+  textarea {
+    width: 100%;
+    min-height: 130px;
+    resize: vertical;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.875rem;
+    line-height: 1.7;
+    color: var(--ink);
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(200,75,47,0.1);
+  }
+  textarea::placeholder { color: var(--muted); }
+
+  /* ── submit ── */
+  .submit-btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--ink);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: background 0.2s, transform 0.15s;
+    margin-top: 0.5rem;
+    animation: fadeUp 0.5s 0.18s ease both;
+    position: relative;
+    overflow: hidden;
+  }
+  .submit-btn:hover:not(:disabled) { background: #2a2724; transform: translateY(-1px); }
+  .submit-btn:active:not(:disabled) { transform: translateY(0); }
+  .submit-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .submit-btn svg { width: 18px; height: 18px; }
+  .submit-btn .spinner { display: none; }
+  .submit-btn.loading .btn-label { display: none; }
+  .submit-btn.loading .spinner { display: flex; align-items: center; gap: 10px; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spin { animation: spin 0.75s linear infinite; }
+
+  /* ── error ── */
+  .error-box {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    background: #fdecea;
+    border: 1px solid #f5b8b0;
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    font-size: 0.85rem;
+    color: #8c2216;
+    margin-top: 0.75rem;
+  }
+  .error-box svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+  /* ── results ── */
+  .results { display: none; }
+  .results.visible { display: block; }
+
+  .results-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    animation: fadeUp 0.4s ease both;
+  }
+  .results-header h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.5rem;
+    font-weight: 400;
+  }
+  .results-header p { font-size: 0.82rem; color: var(--muted); }
+
+  .back-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--muted);
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-pill);
+    padding: 6px 14px;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .back-btn:hover { color: var(--ink); border-color: var(--ink); }
+  .back-btn svg { width: 14px; height: 14px; }
+
+  /* ── score card ── */
+  .score-card {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 1.5rem;
+    align-items: center;
+    animation: fadeUp 0.4s 0.04s ease both;
+  }
+  .score-circle {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    flex-shrink: 0;
+  }
+  .score-circle svg { transform: rotate(-90deg); }
+  .score-circle .track { fill: none; stroke: var(--paper-2); stroke-width: 7; }
+  .score-circle .fill {
+    fill: none;
+    stroke-width: 7;
+    stroke-linecap: round;
+    stroke-dasharray: 251.2;
+    stroke-dashoffset: 251.2;
+    transition: stroke-dashoffset 1s ease, stroke 0.5s;
+  }
+  .score-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .score-overlay .score-pct {
+    font-family: 'DM Mono', monospace;
+    font-size: 1.4rem;
+    font-weight: 500;
+    color: var(--ink);
+    line-height: 1;
+  }
+  .score-overlay .score-label {
+    font-size: 0.6rem;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .score-meta h3 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.25rem;
+    font-weight: 400;
+    margin-bottom: 4px;
+  }
+  .score-meta p { font-size: 0.82rem; color: var(--muted); margin-bottom: 10px; }
+  .score-badge {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: var(--radius-pill);
+    letter-spacing: 0.04em;
+  }
+
+  /* ── skills grid ── */
+  .skills-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    animation: fadeUp 0.4s 0.1s ease both;
+  }
+  .skill-chip {
+    font-size: 0.78rem;
+    font-weight: 500;
+    padding: 5px 12px;
+    border-radius: var(--radius-pill);
+    background: var(--paper-2);
+    color: var(--ink);
+    border: 1px solid var(--border);
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .skill-chip:hover { background: var(--accent-pale); border-color: #e8a898; }
+
+  /* ── questions ── */
+  .questions-list {
+    list-style: none;
+    animation: fadeUp 0.4s 0.16s ease both;
+  }
+  .q-item {
+    display: flex;
+    gap: 14px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+    align-items: flex-start;
+    transition: background 0.15s;
+  }
+  .q-item:first-child { padding-top: 0; }
+  .q-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .q-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    min-width: 22px;
+    padding-top: 2px;
+    font-weight: 500;
+  }
+  .q-text { font-size: 0.9rem; line-height: 1.6; color: var(--ink); }
+
+  /* ── filename strip ── */
+  .filename-strip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-bottom: 1.5rem;
+    animation: fadeUp 0.4s ease both;
+  }
+  .filename-strip svg { width: 13px; height: 13px; }
+
+  /* ── keyframes ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── responsive ── */
+  @media (max-width: 520px) {
+    .score-card { grid-template-columns: 1fr; justify-items: center; text-align: center; }
+    .masthead { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- Masthead -->
+  <div class="masthead">
+    <div class="masthead-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+        <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+      </svg>
+    </div>
+    <div>
+      <h1>Resume<br/><em>Analyzer</em></h1>
+      <p>ATS scoring · skill extraction · interview prep</p>
+    </div>
+  </div>
+
+  <!-- API URL bar -->
+  <div class="api-bar">
+    <label>API</label>
+    <input type="text" id="api-url" value="http://localhost:8000" placeholder="http://localhost:8000" />
+  </div>
+
+  <!-- Form -->
+  <div id="form-view">
+    <div class="card">
+      <div class="card-eyebrow">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+        Resume PDF
+      </div>
+      <div class="drop-zone" id="drop-zone">
+        <input type="file" id="file-input" accept=".pdf" />
+        <div class="dz-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+          </svg>
+        </div>
+        <div class="dz-primary">Drop your PDF or click to browse</div>
+        <div class="dz-secondary">Only .pdf files are accepted</div>
+      </div>
+      <div class="file-pill" id="file-pill">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        <span id="file-name-label"></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-eyebrow">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+        </svg>
+        Job description
+      </div>
+      <textarea id="jd-input" placeholder="Paste the full job description here — role requirements, responsibilities, skills…"></textarea>
+    </div>
+
+    <button class="submit-btn" id="submit-btn" disabled>
+      <span class="btn-label">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        Analyze resume
+      </span>
+      <span class="spinner">
+        <svg class="spin" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+        </svg>
+        Analyzing…
+      </span>
+    </button>
+
+    <div class="error-box" id="error-box">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      <span id="error-text"></span>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div class="results" id="results-view">
+
+    <div class="results-header">
+      <div>
+        <h2>Analysis complete</h2>
+        <p id="results-subtitle"></p>
+      </div>
+      <button class="back-btn" id="back-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+        </svg>
+        New analysis
+      </button>
+    </div>
+
+    <div class="filename-strip" id="filename-strip">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+      </svg>
+      <span id="result-filename"></span>
+    </div>
+
+    <!-- ATS Score -->
+    <div class="card">
+      <div class="card-eyebrow">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+        ATS match score
+      </div>
+      <div class="score-card">
+        <div class="score-circle">
+          <svg viewBox="0 0 100 100" width="100" height="100">
+            <circle class="track" cx="50" cy="50" r="40"/>
+            <circle class="fill" id="score-ring" cx="50" cy="50" r="40"/>
+          </svg>
+          <div class="score-overlay">
+            <span class="score-pct" id="score-pct">0%</span>
+            <span class="score-label">match</span>
+          </div>
+        </div>
+        <div class="score-meta">
+          <h3 id="score-heading">Calculating…</h3>
+          <p id="score-desc"></p>
+          <span class="score-badge" id="score-badge"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Skills -->
+    <div class="card">
+      <div class="card-eyebrow">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+        </svg>
+        Detected skills
+      </div>
+      <div class="skills-wrap" id="skills-wrap"></div>
+    </div>
+
+    <!-- Interview Qs -->
+    <div class="card">
+      <div class="card-eyebrow">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+        Interview questions
+      </div>
+      <ul class="questions-list" id="questions-list"></ul>
+    </div>
+
+  </div><!-- /results -->
+</div><!-- /shell -->
+
+<script>
+  const fileInput   = document.getElementById('file-input');
+  const dropZone    = document.getElementById('drop-zone');
+  const filePill    = document.getElementById('file-pill');
+  const fileNameLbl = document.getElementById('file-name-label');
+  const jdInput     = document.getElementById('jd-input');
+  const submitBtn   = document.getElementById('submit-btn');
+  const errorBox    = document.getElementById('error-box');
+  const errorText   = document.getElementById('error-text');
+  const formView    = document.getElementById('form-view');
+  const resultsView = document.getElementById('results-view');
+  const backBtn     = document.getElementById('back-btn');
+  const apiUrl      = document.getElementById('api-url');
+
+  let selectedFile = null;
+
+  function checkReady() {
+    submitBtn.disabled = !(selectedFile && jdInput.value.trim().length > 10);
+  }
+
+  function setFile(f) {
+    if (!f) return;
+    if (!f.name.toLowerCase().endsWith('.pdf')) {
+      showError('Only PDF files are accepted.');
+      return;
+    }
+    selectedFile = f;
+    fileNameLbl.textContent = f.name;
+    filePill.style.display = 'flex';
+    hideError();
+    checkReady();
+  }
+
+  fileInput.addEventListener('change', () => setFile(fileInput.files[0]));
+  jdInput.addEventListener('input', checkReady);
+
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    setFile(e.dataTransfer.files[0]);
+  });
+
+  function showError(msg) { errorText.textContent = msg; errorBox.style.display = 'flex'; }
+  function hideError() { errorBox.style.display = 'none'; }
+
+  submitBtn.addEventListener('click', async () => {
+    if (!selectedFile || !jdInput.value.trim()) return;
+    hideError();
+    submitBtn.classList.add('loading');
+    submitBtn.disabled = true;
+
+    const base = (apiUrl.value || 'http://localhost:8000').replace(/\/$/, '');
+    const fd = new FormData();
+    fd.append('file', selectedFile);
+    fd.append('job_description', jdInput.value.trim());
+
+    try {
+      const res = await fetch(`${base}/upload-resume`, { method: 'POST', body: fd });
+      if (!res.ok) throw new Error(`Server returned ${res.status}`);
+      const data = await res.json();
+      if (data.error) { showError(data.error); return; }
+      renderResults(data);
+      formView.style.display = 'none';
+      resultsView.classList.add('visible');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (err) {
+      showError('Could not reach the API. Check the URL above and make sure CORS is enabled on your FastAPI server.');
+    } finally {
+      submitBtn.classList.remove('loading');
+      submitBtn.disabled = false;
+    }
+  });
+
+  backBtn.addEventListener('click', () => {
+    resultsView.classList.remove('visible');
+    formView.style.display = 'block';
+    selectedFile = null;
+    fileInput.value = '';
+    jdInput.value = '';
+    filePill.style.display = 'none';
+    checkReady();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  function renderResults(data) {
+    const score = Math.round(data.ats_score ?? 0);
+
+    // filename
+    document.getElementById('result-filename').textContent = data.filename || 'resume.pdf';
+    document.getElementById('results-subtitle').textContent =
+      `Analyzed against ${jdInput.value.trim().split(/\s+/).length} word job description`;
+
+    // ring
+    const ring = document.getElementById('score-ring');
+    const circumference = 251.2;
+    const offset = circumference - (score / 100) * circumference;
+    let ringColor, badgeText, badgeBg, badgeColor, heading, desc;
+
+    if (score >= 75) {
+      ringColor = '#2a6c4a'; badgeText = 'Strong match';
+      badgeBg = '#e3f0ea'; badgeColor = '#2a6c4a';
+      heading = 'Strong candidate'; desc = 'Your resume aligns well with this role.';
+    } else if (score >= 50) {
+      ringColor = '#8a5a1a'; badgeText = 'Partial match';
+      badgeBg = '#fdf0dd'; badgeColor = '#8a5a1a';
+      heading = 'Decent fit'; desc = 'Some gaps — consider tailoring further.';
+    } else {
+      ringColor = '#c84b2f'; badgeText = 'Low match';
+      badgeBg = '#f5e8e4'; badgeColor = '#c84b2f';
+      heading = 'Needs work'; desc = 'Significant gaps found. Revise keywords.';
+    }
+
+    setTimeout(() => {
+      ring.style.strokeDashoffset = offset;
+      ring.style.stroke = ringColor;
+    }, 80);
+
+    // animate score counter
+    let cur = 0;
+    const pctEl = document.getElementById('score-pct');
+    const step = () => {
+      if (cur < score) { cur = Math.min(cur + 2, score); pctEl.textContent = cur + '%'; requestAnimationFrame(step); }
+    };
+    requestAnimationFrame(step);
+
+    document.getElementById('score-heading').textContent = heading;
+    document.getElementById('score-desc').textContent = desc;
+    const badge = document.getElementById('score-badge');
+    badge.textContent = badgeText;
+    badge.style.background = badgeBg;
+    badge.style.color = badgeColor;
+
+    // skills
+    const wrap = document.getElementById('skills-wrap');
+    wrap.innerHTML = '';
+    const skills = Array.isArray(data.skills) ? data.skills : [];
+    if (!skills.length) {
+      wrap.innerHTML = '<span style="font-size:0.82rem;color:var(--muted)">No skills detected.</span>';
+    } else {
+      skills.forEach(s => {
+        const chip = document.createElement('span');
+        chip.className = 'skill-chip';
+        chip.textContent = s;
+        wrap.appendChild(chip);
+      });
+    }
+
+    // questions
+    const list = document.getElementById('questions-list');
+    list.innerHTML = '';
+    const qs = Array.isArray(data.interview_questions) ? data.interview_questions : [];
+    if (!qs.length) {
+      list.innerHTML = '<li class="q-item"><span class="q-text" style="color:var(--muted)">No questions generated.</span></li>';
+    } else {
+      qs.forEach((q, i) => {
+        const li = document.createElement('li');
+        li.className = 'q-item';
+        li.innerHTML = `<span class="q-num">0${i + 1}</span><span class="q-text">${q}</span>`;
+        list.appendChild(li);
+      });
+    }
+  }
+</script>
+</body>
+</html>

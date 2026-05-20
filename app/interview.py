@@ -1,25 +1,16 @@
-from transformers import (
-    AutoTokenizer,
-    AutoModelForCausalLM,
-    pipeline
-)
+import os
 
-MODEL_NAME = (
-    "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
-)
+from dotenv import load_dotenv
 
-tokenizer = AutoTokenizer.from_pretrained(
-    MODEL_NAME
-)
+from openai import OpenAI
 
-model = AutoModelForCausalLM.from_pretrained(
-    MODEL_NAME
-)
+load_dotenv()
 
-generator = pipeline(
-    "text-generation",
-    model=model,
-    tokenizer=tokenizer
+client = OpenAI(
+
+    api_key=os.getenv("GROQ_API_KEY"),
+
+    base_url="https://api.groq.com/openai/v1"
 )
 
 
@@ -27,56 +18,45 @@ def generate_questions(skills):
 
     all_questions = []
 
-    # Limit skills for speed
-    skills = skills[:5]
-
     for skill in skills:
 
         prompt = f"""
 Generate 3 technical interview questions
-for a candidate skilled in {skill}.
+for skill: {skill}
 
-Return ONLY the questions.
-Do not include explanations.
+Return ONLY questions.
 """
 
-        result = generator(
-            prompt,
-            max_new_tokens=80,
-            temperature=0.3,
-            do_sample=False
+        response = client.chat.completions.create(
+
+            model="llama-3.1-8b-instant",
+
+            messages=[
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ],
+
+            temperature=0.3
         )
 
-        generated_text = result[0][
-            "generated_text"
+        result = response.choices[0].message.content
+
+        questions = [
+
+            q.strip()
+
+            for q in result.split("\n")
+
+            if q.strip()
         ]
-
-        # Remove prompt from output
-        answer = generated_text.replace(
-            prompt,
-            ""
-        ).strip()
-
-        # Split questions
-        questions = answer.split("\n")
-
-        cleaned_questions = []
-
-        for question in questions:
-
-            question = question.strip()
-
-            if question:
-
-                cleaned_questions.append(
-                    question
-                )
 
         all_questions.append({
 
             "skill": skill,
 
-            "questions": cleaned_questions
+            "questions": questions
         })
 
     return all_questions

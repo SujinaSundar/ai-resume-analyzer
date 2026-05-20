@@ -1,29 +1,44 @@
+import os
 import shutil
 
-from fastapi import (
-    FastAPI,
-    UploadFile,
-    File,
-    Form
-)
+from fastapi import FastAPI
+from fastapi import UploadFile
+from fastapi import File
+from fastapi import Form
 
-from app.ats import (
-    calculate_ats_score
-)
+from pypdf import PdfReader
 
-from app.interview import (
-    generate_questions
-)
-
-from app.parser import (
-    extract_text
-)
-
-from app.skills import (
-    extract_skills
-)
+from app.skills import extract_skills
+from app.interview import generate_questions
+from app.ats import calculate_ats_score
 
 app = FastAPI()
+
+
+UPLOAD_FOLDER = "uploads"
+
+os.makedirs(
+    UPLOAD_FOLDER,
+    exist_ok=True
+)
+
+
+def extract_text_from_pdf(file_path):
+
+    reader = PdfReader(file_path)
+
+    text = ""
+
+    for page in reader.pages:
+
+        page_text = page.extract_text()
+
+        if page_text:
+
+            text += page_text
+
+    return text
+
 
 @app.get("/")
 def home():
@@ -32,22 +47,19 @@ def home():
         "message": "AI Resume Analyzer Running"
     }
 
+
 @app.post("/upload-resume")
 async def upload_resume(
 
     file: UploadFile = File(...),
 
     job_description: str = Form(...)
-
 ):
 
-    if not file.filename.endswith(".pdf"):
-
-        return {
-            "error": "Only PDF files allowed"
-        }
-
-    file_path = f"uploads/{file.filename}"
+    file_path = os.path.join(
+        UPLOAD_FOLDER,
+        file.filename
+    )
 
     with open(file_path, "wb") as buffer:
 
@@ -56,34 +68,32 @@ async def upload_resume(
             buffer
         )
 
-    # Extract text
-    resume_text = extract_text(
+    resume_text = extract_text_from_pdf(
         file_path
     )
 
-    # ATS Score
-    score = calculate_ats_score(
+    ats_score = calculate_ats_score(
+
         resume_text,
+
         job_description
     )
 
-    # Extract skills
     skills = extract_skills(
         resume_text
     )
 
-    # Generate AI questions
-    questions = generate_questions(
-        skills
+    interview_questions = generate_questions(
+        skills[:5]
     )
 
     return {
 
         "filename": file.filename,
 
-        "ats_score": score,
+        "ats_score": ats_score,
 
         "skills": skills,
 
-        "interview_questions": questions
+        "interview_questions": interview_questions
     }

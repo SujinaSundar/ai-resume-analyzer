@@ -1,52 +1,69 @@
-KNOWN_SKILLS = [
+import os
 
-    "Python",
-    "FastAPI",
-    "Docker",
-    "AWS",
-    "SQL",
-    "TensorFlow",
-    "PyTorch",
-    "Machine Learning",
-    "Deep Learning",
-    "NLP",
-    "Pandas",
-    "NumPy",
-    "Scikit-learn",
-    "SARIMA",
-    "Statistical Modeling",
-    "Time Series Forecasting",
-    "Git",
-    "Kubernetes",
-    "React",
-    "Flask",
-    "Django",
-    "Azure",
-    "GCP",
-    "Linux",
-    "CI/CD",
-    "GitHub Actions",
-    "Jenkins",
-    "Power BI",
-    "Tableau",
-    "Excel"
-]
+from dotenv import load_dotenv
+
+from openai import OpenAI
+
+load_dotenv()
+
+client = OpenAI(
+
+    api_key=os.getenv("GROQ_API_KEY"),
+
+    base_url="https://api.groq.com/openai/v1"
+)
 
 
 def extract_skills(resume_text):
 
-    found_skills = []
+    prompt = prompt = f"""
+You are a resume skill extractor.
 
-    resume_lower = (
-        resume_text.lower()
+Return ONLY a comma separated list.
+
+NO introduction.
+NO explanation.
+NO numbering.
+NO sentences.
+
+Extract ONLY:
+- programming languages
+- frameworks
+- databases
+- cloud tools
+- ML libraries
+
+Ignore:
+- projects
+- responsibilities
+- soft skills
+
+Resume:
+{resume_text}
+
+"""
+
+    response = client.chat.completions.create(
+
+        model="llama-3.1-8b-instant",
+
+        messages=[
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ],
+
+        temperature=0
     )
 
-    for skill in KNOWN_SKILLS:
+    result = response.choices[0].message.content
 
-        if skill.lower() in (
-            resume_lower
-        ):
+    return [
 
-            found_skills.append(skill)
+        skill.strip()
 
-    return found_skills
+        for skill in result.split(",")
+
+        if skill.strip()
+    ]

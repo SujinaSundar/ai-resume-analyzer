@@ -1,0 +1,12 @@
+.venv
+.git
+__pycache__
+.pytest_cache
+
+uploads
+data
+
+*.pdf
+*.csv
+
+resume-analyzer-chart
