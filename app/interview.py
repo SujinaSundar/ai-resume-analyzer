@@ -6,13 +6,11 @@ from openai import OpenAI
 
 load_dotenv()
 
-client = OpenAI(
+def get_client():
 
-    api_key=os.getenv("GROQ_API_KEY"),
-
-    base_url="https://api.groq.com/openai/v1"
-)
-
+    return OpenAI(
+        api_key=os.getenv("OPENAI_API_KEY")
+    )
 
 def generate_questions(skills):
 
@@ -26,7 +24,7 @@ for skill: {skill}
 
 Return ONLY questions.
 """
-
+        client = get_client()
         response = client.chat.completions.create(
 
             model="llama-3.1-8b-instant",
