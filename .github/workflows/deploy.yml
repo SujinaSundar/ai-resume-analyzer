@@ -1,0 +1,42 @@
+name: Deploy To EC2
+
+on:
+push:
+branches:
+- feature-ats-store
+
+jobs:
+
+deploy:
+
+```
+runs-on: ubuntu-latest
+
+steps:
+
+  - name: Deploy to EC2
+
+    uses: appleboy/ssh-action@v1.0.3
+
+    with:
+
+      host: ${{ secrets.EC2_HOST }}
+
+      username: ${{ secrets.EC2_USERNAME }}
+
+      key: ${{ secrets.EC2_SSH_KEY }}
+
+      script: |
+
+        cd ai-resume-analyzer
+
+        git pull
+
+        docker stop $(docker ps -q) || true
+
+        docker rm $(docker ps -aq) || true
+
+        docker build -t resume-analyser:v1 .
+
+        docker run -d -p 8000:8000 --env-file .env resume-analyser:v1
+```
