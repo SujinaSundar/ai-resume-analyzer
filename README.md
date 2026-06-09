@@ -76,7 +76,7 @@ ai-resume-analyzer/
 User
  │
  ▼
-Frontend (HTML/CSS/JS)
+Swagger
  │
  ▼
 FastAPI Backend
@@ -196,29 +196,6 @@ Swagger UI:
 http://localhost:8000/docs
 ```
 
----
-
-## Frontend
-
-Launch the frontend using VS Code Live Server:
-
-```text
-frontend/resume-analyzer.html
-```
-
-The frontend connects to:
-
-```text
-http://localhost:8000/upload-resume
-```
-
-and displays:
-
-* ATS Score
-* Extracted Skills
-* Interview Questions
-
----
 
 ## Docker Deployment
 
