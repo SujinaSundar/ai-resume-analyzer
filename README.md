@@ -115,23 +115,54 @@ POST /upload-resume
 
 ```json
 {
-  "filename": "resume.pdf",
-  "ats_score": 86,
+  "filename": "Sujina_Resume_Honeywell.pdf",
+  "ats_score": 46.77,
   "skills": [
     "Python",
+    "SQL",
+    "NumPy",
+    "Pandas",
+    "Matplotlib",
+    "Scikit-learn",
+    "Apache Spark",
+    "Spark SQL",
+    "Spark MLlib",
     "FastAPI",
     "Docker",
-    "Kubernetes"
+    "REST API Development",
+    "Git",
+    "Jupyter",
+    "LLMs",
+    "Retrieval-Augmented Generation",
+    "LLM Fine-Tuning",
+    "LoRA",
+    "PEFT",
+    "LlamaIndex",
+    "SARIMA",
+    "Kaggle",
+    "Python",
+    "SQL"
   ],
   "interview_questions": [
-    "What is FastAPI?",
-    "Explain Docker architecture.",
-    "What is Kubernetes?"
+    "1. Implement a function to check if a given string is a palindrome, ignoring case, spaces, and punctuation.",
+    "2. Write a Python function to find the first duplicate in an array of integers. If no duplicates are found, return None.",
+    "3. Design a Python function to find the maximum sum of a subarray within a given one-dimensional array of integers.",
+    "1. Write a SQL query to retrieve the top 3 highest paying jobs from the employees table, along with the average salary of each job.",
+    "2. You have two tables, orders and customers. The orders table has columns order_id, customer_id, order_date, and total. The customers table has columns customer_id, name, and email. Write a SQL query to retrieve the total amount spent by each customer, along with their name and email.",
+    "3. Given a table with the following structure: id (primary key), name, age, and salary. Write a SQL query to retrieve the names of all employees who are either 30 years old or older, and have a salary greater than the average salary of all employees.",
+    "1. Write a function to create a 2D NumPy array with dimensions 3x4 filled with zeros, and then replace the first row with a 1D array [1, 2, 3, 4].",
+    "2. Given two 1D NumPy arrays, write a function to find the intersection of two arrays, i.e., the elements that are present in both arrays.",
+    "3. Write a function to perform element-wise multiplication of two 2D NumPy arrays, and then calculate the mean of the resulting array along the second axis.",
+    "1. Write a Pandas function to efficiently merge two DataFrames with different indexes, assuming that the common column is named 'id'.",
+    "2. You have a DataFrame with a column 'date' in string format ('YYYY-MM-DD'). Write a Pandas function to convert this column to datetime format and then calculate the difference between the maximum and minimum dates.",
+    "3. You have a DataFrame with a column 'name' and another column 'age'. Write a Pandas function to filter out rows where the age is greater than 50 and then group the remaining rows by 'name' to calculate the average age.",
+    "1. Create a Matplotlib plot that displays the distribution of a normal distribution with a mean of 0 and a standard deviation of 1. Include a title, labels, and a legend.",
+    "2. Write a function that generates a scatter plot of a dataset with x and y coordinates. The function should take in a pandas DataFrame as input and plot the points with different colors based on a categorical column in the DataFrame.",
+    "3. Create a Matplotlib bar chart that displays the top 5 most frequent words in a given text, along with their frequencies. The text is stored in a string and the words are separated by spaces."
   ]
 }
 ```
 
----
 
 ## Running Locally
 
